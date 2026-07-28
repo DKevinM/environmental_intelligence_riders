@@ -36,7 +36,7 @@ def load_current_aqhi(cfg):
             if d<=float(aq.get('search_radius_km',30)):cand.append((d,r,v,la,lo))
     if not cand:return {'status':'missing','source':src,'fallback':fb,'aqhi':None}
     d,r,v,la,lo=min(cand,key=lambda x:x[0]); b=bearing_deg(float(e['latitude']),float(e['longitude']),la,lo)
-    return {'status':'ok','source':src,'fallback':fb,'aqhi':round(v,1),'station_name':first(r,STATION) or 'Nearest AQHI point','timestamp':first(r,TIME),'distance_km':round(d,2),'direction':compass(b)}
+    return {'status':'ok','source':src,'fallback':fb,'aqhi':round(v,1),'station_name':first(r,STATION) or 'Nearest AQHI point','timestamp':first(r,TIME),'distance_km':round(d,2),'direction':compass(b),'aqhi_change_1h':num(r.get('AQHI_change_1h')),'aqhi_change_3h':num(r.get('AQHI_change_3h'))}
 def load_forecast_aqhi(cfg):
     # Saskatchewan's forecast source (aqhi_forecasts.geojson, scraped from ECCC's
     # provincial summary) is a 4-period day/night outlook (Today/Tonight/Tomorrow/

@@ -44,9 +44,18 @@ firms:
 # No 511/cameras or wind back-trajectory equivalent wired up for Saskatchewan yet -
 # deliberately left out of this first pass (see README).
 
+# Surface (10m) vs upper-level (120m) HRDPS wind direction, read from the same
+# Supabase-stored met files AB_winds already produces (covers the SK bbox too -
+# see py/ab_met_pull.py in AB_winds). SUPABASE_URL/SUPABASE_SERVICE_KEY come from
+# /opt/airquality/config/intelligence.env, same credentials used elsewhere.
+wind_shear:
+  timeout_seconds: 20
+
 thresholds:
   heat: {moderate_c: 27, high_c: 30, extreme_c: 35}
   wind_gust_kmh: {moderate: 45, high: 65, extreme: 90}
   precipitation_probability: {moderate: 40, high: 70}
   precipitation_mm_hour: {moderate: 2.5, high: 7.5}
   aqhi: {moderate: 4, high: 7, extreme: 10.01}
+  aqhi_rate: {moderate: 1.0, high: 2.0, extreme: 3.0}
+  wind_shear: {moderate: 45, high: 90, extreme: 135}
