@@ -1,13 +1,13 @@
 #!/bin/bash
 set -e
 
-cd /opt/airquality/github/edmonton_folk_fest
+cd /opt/airquality/github/riders_sitrep
 source .venv/bin/activate
 set -a
 source /opt/airquality/config/intelligence.env
 set +a
 
-LOCKFILE="/opt/airquality/locks/edmonton_folk_fest_git.lock"
+LOCKFILE="/opt/airquality/locks/riders_sitrep_git.lock"
 mkdir -p "$(dirname "$LOCKFILE")"
 
 (
