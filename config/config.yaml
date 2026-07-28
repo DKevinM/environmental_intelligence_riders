@@ -1,0 +1,52 @@
+project:
+  name: Saskatchewan Roughriders Environmental Intelligence
+  timezone: America/Regina
+
+data_mode: auto
+
+event:
+  name: Saskatchewan Roughriders Home Game
+  venue: Mosaic Stadium
+  latitude: 50.4507
+  longitude: -104.6330
+  local_radius_km: 10
+  influence_radius_km: 20
+
+weather:
+  forecast_hours: 24
+  timeout_seconds: 20
+
+air_quality:
+  current_source: "/opt/airquality/github/SK_datapull/data/current_map.geojson"
+  forecast_source: "/opt/airquality/github/SK_datapull/data/aqhi_forecasts.geojson"
+  blend_grid_file: "/opt/airquality/github/SK_datapull/data/sk_current_blend.geojson"
+  purpleair_source: "/opt/airquality/github/SK_datapull/data/SK_PM25_map.json"
+  firesmoke_current_file: "/opt/airquality/github/SK_datapull/data/firesmoke_now.geojson"
+  search_radius_km: 30
+  fallback_current_file: data/sample/aqhi_current.geojson
+  fallback_forecast_file: data/sample/aqhi_forecast.json
+
+map:
+  half_degree_bbox: 0.6
+  purpleair_radius_km: 25
+  station_radius_km: 40
+
+# FIRMS_API_KEY must be set as an environment variable (see /opt/airquality/config/intelligence.env),
+# never committed here - this repo is public.
+firms:
+  base_url: "https://firms.modaps.eosdis.nasa.gov"
+  source: "VIIRS_SNPP_NRT"
+  radius_km: 300
+  cluster_km: 10
+  min_confidence: 0.30
+  day_range: 2
+
+# No 511/cameras or wind back-trajectory equivalent wired up for Saskatchewan yet -
+# deliberately left out of this first pass (see README).
+
+thresholds:
+  heat: {moderate_c: 27, high_c: 30, extreme_c: 35}
+  wind_gust_kmh: {moderate: 45, high: 65, extreme: 90}
+  precipitation_probability: {moderate: 40, high: 70}
+  precipitation_mm_hour: {moderate: 2.5, high: 7.5}
+  aqhi: {moderate: 4, high: 7, extreme: 10.01}
