@@ -8,7 +8,7 @@ def sensor_label(source):
 def build(cfg,w,aq,fx,a,fire=None,trajectory=None,wx_alerts=None):
  # No wind back-trajectory model for Saskatchewan yet - trajectory is always
  # empty here, so this only ever takes the surface-wind fallback branches.
- c=w['current']; m=a['weather_metrics']; h=a['hazards']; parts=[f"At {cfg['event']['name']}, temperature is {f(c.get('temperature_c'),1)}°C and feels near {f(c.get('apparent_temperature_c'),1)}°C. Winds are {f(c.get('wind_speed_kmh'))} km/h from {compass(c.get('wind_direction_deg'))}, gusting near {f(c.get('wind_gust_kmh'))} km/h."]
+ c=w['current']; m=a['weather_metrics']; h=a['hazards']; parts=[f"At {cfg['event']['venue']}, temperature is {f(c.get('temperature_c'),1)}°C and feels near {f(c.get('apparent_temperature_c'),1)}°C. Winds are {f(c.get('wind_speed_kmh'))} km/h from {compass(c.get('wind_direction_deg'))}, gusting near {f(c.get('wind_gust_kmh'))} km/h."]
  wx=(wx_alerts or {}).get('alerts') or []
  if wx:parts.append(f"Environment Canada has {len(wx)} active alert(s) in effect for the venue: {', '.join(sorted(set(x['name'] for x in wx)))}.")
  tz=cfg['project'].get('timezone','America/Edmonton')
