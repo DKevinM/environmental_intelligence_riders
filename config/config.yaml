@@ -41,8 +41,8 @@ firms:
   min_confidence: 0.30
   day_range: 2
 
-# No 511/cameras or wind back-trajectory equivalent wired up for Saskatchewan yet -
-# deliberately left out of this first pass (see README).
+# No 511/cameras equivalent wired up for Saskatchewan yet - deliberately left
+# out of this first pass (see README).
 
 # Surface (10m) vs upper-level (120m) HRDPS wind direction, read from the same
 # Supabase-stored met files AB_winds already produces (covers the SK bbox too -
@@ -50,6 +50,18 @@ firms:
 # /opt/airquality/config/intelligence.env, same credentials used elsewhere.
 wind_shear:
   timeout_seconds: 20
+
+# HRDPS back-trajectory model (AB_winds/odour/backtraj_core.py), reused as-is -
+# same Supabase-stored wind fields as wind_shear above, which already cover the
+# SK bbox. Ported using TIME_UTC (not TIME_LOCAL) since backtraj_core.py hardcodes
+# ZoneInfo("America/Edmonton") for local-time conversion, which would be wrong for
+# Saskatchewan (no DST) outside the Alberta MDT window.
+wind_trajectory:
+  ab_winds_dir: "/opt/airquality/github/AB_winds"
+  python_bin: "/opt/airquality/venv/bin/python3"
+  hours: 6
+  timeout_seconds: 240
+  fire_path_threshold_km: 20
 
 thresholds:
   heat: {moderate_c: 27, high_c: 30, extreme_c: 35}
