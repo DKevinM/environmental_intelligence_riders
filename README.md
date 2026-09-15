@@ -18,7 +18,7 @@ instead of Alberta's.
   Deliberately left out of this first pass rather than faked.
 - **No traffic camera integration** — no confirmed Saskatchewan equivalent to
   511 Alberta's camera API researched yet.
-- Weather (Open-Meteo), fire (NASA FIRMS), and Environment Canada weather alerts
+- Weather (Open-Meteo), fire (NASA FIRMS), and ECCC weather alerts
   (MSC GeoMet) are all provider-agnostic and needed no changes.
 
 ## Install and run
