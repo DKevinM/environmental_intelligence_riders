@@ -26,7 +26,11 @@ mkdir -p "$(dirname "$LOCKFILE")"
 LIVE_STATUS_FILE="/opt/airquality/live-status/riders_sitrep_watch_status.json"
 GITLOCK="/opt/airquality/locks/riders_sitrep_git.lock"
 PUBLISH_STAMP="/opt/airquality/locks/riders_sitrep_watch_publish.stamp"
-PUBLISH_INTERVAL_SECONDS=300
+# Raised 300 -> 1800 on 2026-09-25: at 5 min, GitHub Pages ran ~13-14 deploys/hour, above its
+# ~10/hour guideline, and a 30-min burst of deploy failures that day sent failure emails. The
+# KRM-served page (status.krmenvironmental.com/riders/) still gets watch_status.json live every
+# minute via nginx; only the GitHub Pages fallback copy is throttled.
+PUBLISH_INTERVAL_SECONDS=1800
 (
   flock -w 30 200 || { echo "Could not get git lock within 30s; skipping status publish this cycle."; exit 0; }
 
