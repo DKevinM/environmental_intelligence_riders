@@ -21,7 +21,7 @@ air_quality:
   forecast_source: "/opt/airquality/github/SK_datapull/data/aqhi_forecasts.geojson"
   blend_grid_file: "/opt/airquality/github/SK_datapull/data/sk_current_blend.geojson"
   purpleair_source: "/opt/airquality/github/SK_datapull/data/SK_PM25_map.json"
-  firesmoke_current_file: "/opt/airquality/github/SK_datapull/data/firesmoke_now.geojson"
+  firesmoke_current_file: "/opt/airquality/github/AB_datapull/data/output/firesmoke_now.geojson"
   search_radius_km: 30
   fallback_current_file: data/sample/aqhi_current.geojson
   fallback_forecast_file: data/sample/aqhi_forecast.json
