@@ -17,6 +17,10 @@ weather:
   timeout_seconds: 20
 
 air_quality:
+  # ECCC hourly AQHI first; SK's own feed only refreshes ~twice a day (see load_current_aqhi)
+  preferred_current_sources:
+    - "https://raw.githubusercontent.com/DKevinM/CAN_AQHI/main/data/aqhi_observations.geojson"
+  current_max_age_hours: 3
   current_source: "/opt/airquality/github/SK_datapull/data/current_map.geojson"
   forecast_source: "/opt/airquality/github/SK_datapull/data/aqhi_forecasts.geojson"
   blend_grid_file: "/opt/airquality/github/SK_datapull/data/sk_current_blend.geojson"

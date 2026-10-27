@@ -2,6 +2,7 @@ from core.config import resolve_path
 from core.geometry import haversine_km,bearing_deg,compass
 from core.io import read_structured_source
 from core.aqhi import pm25_to_eaqhi
+from datetime import datetime,timedelta,timezone
 AK=('AQHI','aqhi','value','Value','current_aqhi'); LAT=('latitude','lat','Latitude','LAT'); LON=('longitude','lon','lng','Longitude','LON')
 STATION=('station_name','name','station','StationName'); TIME=('timestamp','datetime','time','observed_at','ReadingDate','updated')
 def first(d,ks):
@@ -50,20 +51,49 @@ def load_purpleair_eaqhi_estimate(cfg,n=3):
     nearest=sorted(cand,key=lambda x:x[0])[:n]
     avg_pm=sum(x[2] for x in nearest)/len(nearest)
     return {'status':'ok','aqhi':pm25_to_eaqhi(avg_pm),'pm25_avg':round(avg_pm,1),'n_sensors':len(nearest),'sensor_names':[x[1].get('name') for x in nearest],'max_distance_km':round(nearest[-1][0],2)}
+def ts_of(r):
+    try:
+        t=datetime.fromisoformat(str(first(r,TIME+('observed',))).replace('Z','+00:00'))
+        return t if t.tzinfo else t.replace(tzinfo=timezone.utc)
+    except Exception:return None
 def load_current_aqhi(cfg):
-    aq=cfg['air_quality']; data,src,fb=load(cfg,'current_source',aq['fallback_current_file']); e=cfg['event']; cand=[]
-    for r in records(data):
-        v=num(first(r,AK)); la=num(first(r,LAT)); lo=num(first(r,LON))
-        if v and la is not None and lo is not None:
+    # 2026-10-27: Saskatchewan's own station feed (current_source) only refreshes
+    # about twice a day, so its "current" Regina AQHI could be 12+ h old while
+    # ECCC's hourly value (CAN_AQHI, aqhi_observations.geojson) said otherwise.
+    # preferred_current_sources are tried first; readings older than
+    # current_max_age_hours are only used, labelled stale, when nothing fresher
+    # (and no PurpleAir estimate) is available.
+    aq=cfg['air_quality']; e=cfg['event']; max_age=float(aq.get('current_max_age_hours',3)); now=datetime.now(timezone.utc)
+    srcs=[(u,False) for u in aq.get('preferred_current_sources',[])]
+    data,src,fb=load(cfg,'current_source',aq['fallback_current_file']); loaded=[]
+    for u,_ in srcs:
+        try:loaded.append((read_structured_source(u),u,False))
+        except Exception:pass
+    loaded.append((data,src,fb)); fresh=[]; stale=[]
+    for data,src,fb in loaded:
+        recs=records(data)
+        for r in recs:
+            v=num(first(r,AK)); la=num(first(r,LAT)); lo=num(first(r,LON))
+            if not v or la is None or lo is None:continue
             d=haversine_km(float(e['latitude']),float(e['longitude']),la,lo)
-            if d<=float(aq.get('search_radius_km',30)):cand.append((d,r,v,la,lo))
-    if not cand:
+            if d>float(aq.get('search_radius_km',30)):continue
+            t=ts_of(r); c=(round(d,1),-(t.timestamp() if t else 0),r,v,la,lo,t,src,fb,recs)
+            (stale if t and (now-t).total_seconds()/3600>max_age else fresh).append(c)
+        if fresh:break  # a fresh reading from a preferred source wins over later sources
+    if not fresh:
         est=load_purpleair_eaqhi_estimate(cfg)
         if est.get('status')=='ok':
             return {'status':'estimated','source':src,'fallback':fb,'aqhi':est['aqhi'],'station_name':f"eAQHI estimate ({est['n_sensors']} nearby sensors)",'estimate':est}
-        return {'status':'missing','source':src,'fallback':fb,'aqhi':None}
-    d,r,v,la,lo=min(cand,key=lambda x:x[0]); b=bearing_deg(float(e['latitude']),float(e['longitude']),la,lo)
-    return {'status':'ok','source':src,'fallback':fb,'aqhi':round(v,1),'station_name':first(r,STATION) or 'Nearest AQHI point','timestamp':first(r,TIME),'distance_km':round(d,2),'direction':compass(b),'aqhi_change_1h':num(r.get('AQHI_change_1h')),'aqhi_change_3h':num(r.get('AQHI_change_3h'))}
+        if not stale:return {'status':'missing','source':src,'fallback':fb,'aqhi':None}
+    d,_,r,v,la,lo,t,src,fb,recs=min(fresh or stale,key=lambda x:(x[0],x[1])); b=bearing_deg(float(e['latitude']),float(e['longitude']),la,lo)
+    ch1,ch3=num(r.get('AQHI_change_1h')),num(r.get('AQHI_change_3h'))
+    if ch1 is None and t is not None:  # hourly history file (CAN_AQHI): diff against the same location's earlier hours
+        hist={ts_of(x):num(first(x,AK)) for x in recs if num(first(x,LAT))==la and num(first(x,LON))==lo}
+        p1,p3=hist.get(t-timedelta(hours=1)),hist.get(t-timedelta(hours=3))
+        ch1=round(v-p1,1) if p1 is not None else None; ch3=round(v-p3,1) if p3 is not None else None
+    out={'status':'ok' if fresh else 'stale','source':src,'fallback':fb,'aqhi':round(v,1),'station_name':first(r,STATION) or 'Nearest AQHI point','timestamp':t.isoformat() if t else first(r,TIME),'distance_km':round(d,2),'direction':compass(b),'aqhi_change_1h':ch1,'aqhi_change_3h':ch3}
+    if t:out['age_hours']=round((now-t).total_seconds()/3600,1)
+    return out
 def load_forecast_aqhi(cfg):
     # Saskatchewan's forecast source (aqhi_forecasts.geojson, scraped from ECCC's
     # provincial summary) is a 4-period day/night outlook (Today/Tonight/Tomorrow/

@@ -11,7 +11,7 @@ def build(cfg,w,aq,fx,a,fire=None,trajectory=None,wx_alerts=None):
  wx=(wx_alerts or {}).get('alerts') or []
  if wx:parts.append(f"ECCC has {len(wx)} active alert(s) in effect for the venue: {', '.join(sorted(set(x['name'] for x in wx)))}.")
  tz=cfg['project'].get('timezone','America/Edmonton')
- parts.append(f"The nearest current AQHI is {faqhi(aq.get('aqhi'))} at {aq.get('station_name','the nearest point')}, {f(aq.get('distance_km'),1)} km from the venue." if aq.get('aqhi') is not None else 'A valid current AQHI was not available.')
+ parts.append(f"The nearest current AQHI is {faqhi(aq.get('aqhi'))} at {aq.get('station_name','the nearest point')}, {f(aq.get('distance_km'),1)} km from the venue."+(f" That reading is {f(aq.get('age_hours'),1)} hours old - no fresher value was available." if aq.get('status')=='stale' else '') if aq.get('aqhi') is not None else 'A valid current AQHI was not available.')
  blend=aq.get('blend') or {}
  if blend.get('status')=='ok' and blend.get('value') is not None:parts.append(f"A gridded AQHI estimate blending official and community sensors (confidence: {blend.get('confidence','unknown')}) puts the area near {faqhi(blend.get('value'))}.")
  pollutant=aq.get('pollutant') or {}
