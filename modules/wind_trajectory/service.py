@@ -6,16 +6,19 @@ def load_trajectory(cfg):
     tc=cfg.get('wind_trajectory',{}) or {}
     ab_winds_dir=tc.get('ab_winds_dir','/opt/airquality/github/AB_winds')
     python_bin=tc.get('python_bin','/opt/airquality/venv/bin/python3')
-    hours=float(tc.get('hours',6)); timeout=float(tc.get('timeout_seconds',240))
+    hours=float(tc.get('hours',6)); timeout=float(tc.get('timeout_seconds',600))
     e=cfg['event']
     # Saskatchewan doesn't observe DST (always UTC-6) while Alberta does (UTC-6/-7),
     # and backtraj_core.py's TIME_LOCAL path hardcodes ZoneInfo("America/Edmonton") -
     # using TIME_UTC instead sidesteps that Alberta-specific conversion entirely.
     now_utc=datetime.datetime.now(timezone.utc).replace(minute=0,second=0,microsecond=0)
     outdir=Path(cfg['_root'])/'output'/'wind_trajectory'; outdir.mkdir(parents=True,exist_ok=True)
-    env=dict(os.environ); env.update({'LAT':str(e['latitude']),'LON':str(e['longitude']),'TIME_UTC':now_utc.strftime('%Y-%m-%dT%H:%M:%S'),'HOURS':str(hours),'OUTDIR':str(outdir)})
+    # 2026-10-30: runs the LS model (odour/run_dispersion.py; same env + output files) instead of
+    # backtraj_core.py. RADIUS_KM=0 so paths aren't cut at 25 km (fire-on-path check looks further);
+    # TIME_UTC because run_dispersion reads TIME_LOCAL as Alberta time.
+    env=dict(os.environ); env.update({'LAT':str(e['latitude']),'LON':str(e['longitude']),'TIME_UTC':now_utc.strftime('%Y-%m-%dT%H:%M:%S'),'RADIUS_KM':'0','HOURS':str(hours),'OUTDIR':str(outdir)})
     try:
-        r=subprocess.run([python_bin,'odour/backtraj_core.py'],cwd=ab_winds_dir,env=env,capture_output=True,text=True,timeout=timeout)
+        r=subprocess.run([python_bin,'odour/run_dispersion.py'],cwd=ab_winds_dir,env=env,capture_output=True,text=True,timeout=timeout)
     except Exception as ex:
         return {'status':'error','error':f'{type(ex).__name__}: {ex}'}
     if r.returncode!=0:
@@ -37,7 +40,7 @@ def nearest_fire_on_path(centerlines,fire_hotspots):
     if not centerlines or not centerlines.get('features') or not fire_hotspots:return None
     coords=centerlines['features'][0]['geometry']['coordinates']
     if len(coords)<2:return None
-    vlon,vlat=coords[0]  # track_center[0] in backtraj_core.py is t=0, i.e. the venue itself
+    vlon,vlat=coords[0]  # coords[0] is t=0 (run_dispersion, like backtraj_core), i.e. the venue itself
     best=None
     for h in fire_hotspots:
         fire_dist_from_venue=haversine_km(h['lat'],h['lon'],vlat,vlon)
