@@ -1,1 +1,1 @@
-{"checked_at_utc": "2026-11-10T16:21:03+00:00", "lightning": {"band": "CLEAR", "nearest_km": null}, "radar": {"nearest_km": 0.0, "bucket": "near"}, "ec_alerts": ["freezing rain warning"]}
+{"checked_at_utc": "2026-11-10T16:51:03+00:00", "lightning": {"band": "CLEAR", "nearest_km": null}, "radar": {"nearest_km": 1.2, "bucket": "near"}, "ec_alerts": ["freezing rain warning"]}
